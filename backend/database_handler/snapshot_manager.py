@@ -33,6 +33,7 @@ class SnapshotManager:
             state.id: {
                 "data": state.data,
                 "balance": state.balance,
+                "reroute_to": state.reroute_to,
                 "updated_at": (
                     state.updated_at.isoformat() if state.updated_at else None
                 ),
@@ -110,7 +111,10 @@ class SnapshotManager:
         # Restore current states
         for state_id, state_info in state_data.items():
             new_state = CurrentState(
-                id=state_id, data=state_info["data"], balance=state_info["balance"]
+                id=state_id,
+                data=state_info["data"],
+                balance=state_info["balance"],
+                reroute_to=state_info.get("reroute_to"),
             )
             if state_info["updated_at"]:
                 new_state.updated_at = datetime.fromisoformat(state_info["updated_at"])

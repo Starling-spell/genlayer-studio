@@ -321,6 +321,7 @@ def decide_accepted(
     code_slot_b64: str | None,
     to_address: str,
     leader_node_config: dict,
+    contract_reroute_to: str | None = None,
 ) -> tuple[list[Effect], list[Effect], ConsensusRound, ConsensusRound | None]:
     """Decide effects for AcceptedState.
 
@@ -419,6 +420,7 @@ def decide_accepted(
                             },
                         },
                     },
+                    "reroute_to": contract_reroute_to,
                 }
                 pre_effects.append(RegisterContractEffect(contract_data=new_contract))
                 pre_effects.append(

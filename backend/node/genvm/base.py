@@ -744,9 +744,23 @@ async def run_genvm_host(
     permissions: str = "rwscn",
     code: bytes | None = None,
     fee_context: GenVMFeeContext | None = None,
+    reroute_to: str | None = None,
 ) -> ExecutionResult:
     if logger is None:
         logger = genvm_logger.NoLogger()
+    if reroute_to:
+        # The manager honors the executor override only under debug_mode >= safe
+        # and ignores it silently otherwise, which would run the contract on the
+        # manifest-resolved executor instead of the requested one. Mirrors how
+        # base_host resolves the effective level.
+        effective_debug_mode = debug_mode or (
+            "safe-unbounded" if capture_output else "disabled"
+        )
+        if effective_debug_mode == "disabled":
+            raise ValueError(
+                f"reroute_to={reroute_to!r} requires debug_mode >= safe, "
+                "got 'disabled'"
+            )
     ctx = Context(logger=logger)
     fee_context = fee_context or GenVMFeeContext()
     effective_bucket_totals = fee_context.bucket_totals or [
@@ -839,6 +853,7 @@ async def run_genvm_host(
                             "calldata_bytes", host_args.get("calldata_bytes", b"")
                         ),
                         leader_nondet_results=leader_nondet_results,
+                        reroute_to=reroute_to or "",
                     )
 
                     execution_result = host.provide_result(

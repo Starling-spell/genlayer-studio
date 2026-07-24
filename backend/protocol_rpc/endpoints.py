@@ -66,7 +66,7 @@ from backend.database_handler.transactions_processor import (
 
 logger = logging.getLogger(__name__)
 TRANSACTION_NOT_FOUND_MESSAGE = "Transaction not found"
-from backend.node.base import Node, get_simulator_chain_id
+from backend.node.base import Node, _genvm_debug_mode, get_simulator_chain_id
 from backend.node.types import ExecutionMode, ExecutionResultStatus
 from backend.consensus.base import ConsensusAlgorithm
 from backend.protocol_rpc.call_interceptor import handle_consensus_data_call
@@ -1820,6 +1820,23 @@ def _fee_metadata(decoded_rollup_transaction: DecodedRollupTransaction) -> dict:
     return metadata
 
 
+def _validate_reroute_to(sim_config: dict | None) -> None:
+    """`sim_config.reroute_to` pins the contract to a GenVM executor version.
+
+    The manager honors it only under `debug_mode >= safe` and ignores it
+    silently otherwise, so reject the transaction instead of running it on
+    an executor the caller did not ask for.
+    """
+    if not sim_config or not sim_config.get("reroute_to"):
+        return
+    if _genvm_debug_mode() == "disabled":
+        raise JSONRPCError(
+            code=-32602,
+            message="sim_config.reroute_to requires genvm debug mode (GENVM_DEBUG_MODE)",
+            data={"reroute_to": sim_config["reroute_to"]},
+        )
+
+
 def _validate_fee_envelope(
     decoded_rollup_transaction: DecodedRollupTransaction,
 ) -> None:
@@ -2078,6 +2095,8 @@ def send_raw_transaction(
     sim_config: dict | None = None,
 ) -> str:
     """Persist a raw transaction using a request-scoped session."""
+    _validate_reroute_to(sim_config)
+
     accounts_manager = AccountsManager(session)
     transactions_processor = TransactionsProcessor(session)
 

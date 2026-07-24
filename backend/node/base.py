@@ -1075,6 +1075,7 @@ class Node:
                     message_fee_allocation=message_fee_allocation,
                 ),
                 logger=logger,
+                reroute_to=self.contract_snapshot.reroute_to,
             )
         except FeeValidationError as e:
             result = genvmbase.ExecutionResult(

@@ -19,6 +19,8 @@ class ContractProcessor:
             self.session.query(CurrentState).filter_by(id=contract["id"]).one()
         )
         current_contract.data = contract["data"]
+        if "reroute_to" in contract:
+            current_contract.reroute_to = contract["reroute_to"]
         self.session.commit()
 
     def update_contract_state(

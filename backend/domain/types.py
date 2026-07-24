@@ -46,6 +46,11 @@ class SimValidatorConfig:
 class SimConfig:
     validators: list[SimValidatorConfig]
     genvm_datetime: str | None = None
+    # Studio-only: GenVM executor version directory to run instead of the
+    # manifest-resolved one. On a deploy it is used for the deployment
+    # execution itself and stored on the contract, so every later execution
+    # of that contract keeps using it.
+    reroute_to: str | None = None
 
     @property
     def genvm_datetime_as_datetime(self) -> datetime.datetime | None:
@@ -65,6 +70,7 @@ class SimConfig:
         return cls(
             validators=validators,
             genvm_datetime=d.get("genvm_datetime"),
+            reroute_to=d.get("reroute_to"),
         )
 
     def to_dict(self) -> dict:
@@ -73,6 +79,7 @@ class SimConfig:
                 v.to_dict() if hasattr(v, "to_dict") else v for v in self.validators
             ],
             "genvm_datetime": self.genvm_datetime,
+            "reroute_to": self.reroute_to,
         }
 
 
